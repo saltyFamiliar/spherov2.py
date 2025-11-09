@@ -1,7 +1,6 @@
 from enum import IntEnum
 from typing import Callable, Dict, List, Iterable
 
-from spherov2.commands.animatronic import R2LegActions, Animatronic
 from spherov2.commands.api_and_shell import ApiAndShell
 from spherov2.commands.core import IntervalOptions, Core
 from spherov2.commands.io import AudioPlaybackModes, IO, FrameRotationOptions, FadeOverrideOptions
@@ -12,12 +11,8 @@ from spherov2.commands.sphero import CollisionDetectionMethods as SpheroCollisio
 from spherov2.controls import RawMotorModes
 from spherov2.controls.v2 import Processors
 from spherov2.toy import Toy
-from spherov2.toy.bb9e import BB9E
 from spherov2.toy.bolt import BOLT
 from spherov2.toy.mini import Mini
-from spherov2.toy.r2d2 import R2D2
-from spherov2.toy.r2q5 import R2Q5
-from spherov2.toy.rvr import RVR
 from spherov2.types import Color
 
 
@@ -59,13 +54,6 @@ class ToyUtil:
             not_supported_handler()
 
     @staticmethod
-    def perform_leg_action(toy: Toy, leg_action: R2LegActions, not_supported_handler: Callable[[], None] = None):
-        if toy.implements(Animatronic.perform_leg_action):
-            toy.perform_leg_action(leg_action)
-        elif not_supported_handler:
-            not_supported_handler()
-
-    @staticmethod
     def set_stabilization(toy: Toy, stabilize, not_supported_handler: Callable[[], None] = None):
         if hasattr(toy, 'drive_control'):
             toy.drive_control.set_stabilization(stabilize)
@@ -88,40 +76,10 @@ class ToyUtil:
             not_supported_handler()
 
     @staticmethod
-    def play_animation(toy: Toy, animation: IntEnum, wait: bool = False,
-                       not_supported_handler: Callable[[], None] = None):
-        if toy.implements(Animatronic.play_animation):
-            toy.play_animation(animation, wait)
-        elif not_supported_handler:
-            not_supported_handler()
-
-    @staticmethod
-    def set_head_position(toy: Toy, head_position: float, not_supported_handler: Callable[[], None] = None):
-        if toy.implements(Animatronic.set_head_position):
-            toy.set_head_position(head_position)
-        elif not_supported_handler:
-            not_supported_handler()
-
-    @staticmethod
     def set_main_led(toy: Toy, r: int, g: int, b: int, is_user_color: bool,
                      not_supported_handler: Callable[[], None] = None):
         def _fallback():
-            if isinstance(toy, (R2D2, R2Q5)):
-                mapping = {
-                    toy.LEDs.BACK_RED: r,
-                    toy.LEDs.BACK_GREEN: g,
-                    toy.LEDs.BACK_BLUE: b,
-                    toy.LEDs.FRONT_RED: r,
-                    toy.LEDs.FRONT_GREEN: g,
-                    toy.LEDs.FRONT_BLUE: b
-                }
-            elif isinstance(toy, BB9E):
-                mapping = {
-                    toy.LEDs.BODY_RED: r,
-                    toy.LEDs.BODY_GREEN: g,
-                    toy.LEDs.BODY_BLUE: b
-                }
-            elif isinstance(toy, Mini):
+            if isinstance(toy, Mini):
                 mapping = {
                     toy.LEDs.BODY_RED: r,
                     toy.LEDs.BODY_GREEN: g,
@@ -129,39 +87,6 @@ class ToyUtil:
                     toy.LEDs.USER_BODY_RED: r,
                     toy.LEDs.USER_BODY_GREEN: g,
                     toy.LEDs.USER_BODY_BLUE: b
-                }
-            elif isinstance(toy, RVR):
-                mapping = {
-                    toy.LEDs.RIGHT_HEADLIGHT_RED: r,
-                    toy.LEDs.RIGHT_HEADLIGHT_GREEN: g,
-                    toy.LEDs.RIGHT_HEADLIGHT_BLUE: b,
-                    toy.LEDs.LEFT_HEADLIGHT_RED: r,
-                    toy.LEDs.LEFT_HEADLIGHT_GREEN: g,
-                    toy.LEDs.LEFT_HEADLIGHT_BLUE: b,
-                    toy.LEDs.LEFT_STATUS_INDICATION_RED: r,
-                    toy.LEDs.LEFT_STATUS_INDICATION_GREEN: g,
-                    toy.LEDs.LEFT_STATUS_INDICATION_BLUE: b,
-                    toy.LEDs.RIGHT_STATUS_INDICATION_RED: r,
-                    toy.LEDs.RIGHT_STATUS_INDICATION_GREEN: g,
-                    toy.LEDs.RIGHT_STATUS_INDICATION_BLUE: b,
-                    toy.LEDs.BATTERY_DOOR_FRONT_RED: r,
-                    toy.LEDs.BATTERY_DOOR_FRONT_GREEN: g,
-                    toy.LEDs.BATTERY_DOOR_FRONT_BLUE: b,
-                    toy.LEDs.BATTERY_DOOR_REAR_RED: r,
-                    toy.LEDs.BATTERY_DOOR_REAR_GREEN: g,
-                    toy.LEDs.BATTERY_DOOR_REAR_BLUE: b,
-                    toy.LEDs.POWER_BUTTON_FRONT_RED: r,
-                    toy.LEDs.POWER_BUTTON_FRONT_GREEN: g,
-                    toy.LEDs.POWER_BUTTON_FRONT_BLUE: b,
-                    toy.LEDs.POWER_BUTTON_REAR_RED: r,
-                    toy.LEDs.POWER_BUTTON_REAR_GREEN: g,
-                    toy.LEDs.POWER_BUTTON_REAR_BLUE: b,
-                    toy.LEDs.LEFT_BRAKELIGHT_RED: r,
-                    toy.LEDs.LEFT_BRAKELIGHT_GREEN: g,
-                    toy.LEDs.LEFT_BRAKELIGHT_BLUE: b,
-                    toy.LEDs.RIGHT_BRAKELIGHT_RED: r,
-                    toy.LEDs.RIGHT_BRAKELIGHT_GREEN: g,
-                    toy.LEDs.RIGHT_BRAKELIGHT_BLUE: b
                 }
             else:
                 mapping = None
@@ -177,24 +102,8 @@ class ToyUtil:
         ToyUtil.set_led_matrix_one_colour(toy, r, g, b, _fallback)
 
     @staticmethod
-    def set_head_led(toy: Toy, brightness: int, not_supported_handler: Callable[[], None] = None):
-        if isinstance(toy, BB9E):
-            ToyUtil.set_multiple_leds(toy, {BB9E.LEDs.HEAD: brightness}, not_supported_handler)
-        elif not_supported_handler:
-            not_supported_handler()
-
-    @staticmethod
     def set_front_led(toy: Toy, r: int, g: int, b: int, not_supported_handler: Callable[[], None] = None):
-        if isinstance(toy, RVR):
-            mapping = {
-                RVR.LEDs.RIGHT_HEADLIGHT_RED: r,
-                RVR.LEDs.RIGHT_HEADLIGHT_GREEN: g,
-                RVR.LEDs.RIGHT_HEADLIGHT_BLUE: b,
-                RVR.LEDs.LEFT_HEADLIGHT_RED: r,
-                RVR.LEDs.LEFT_HEADLIGHT_GREEN: g,
-                RVR.LEDs.LEFT_HEADLIGHT_BLUE: b
-            }
-        elif isinstance(toy, (R2D2, R2Q5, BOLT)):
+        if isinstance(toy, BOLT):
             mapping = {
                 toy.LEDs.FRONT_RED: r,
                 toy.LEDs.FRONT_GREEN: g,
@@ -212,16 +121,7 @@ class ToyUtil:
 
     @staticmethod
     def set_back_led(toy: Toy, r: int, g: int, b: int, not_supported_handler: Callable[[], None] = None):
-        if isinstance(toy, RVR):
-            mapping = {
-                RVR.LEDs.RIGHT_BRAKELIGHT_RED: r,
-                RVR.LEDs.RIGHT_BRAKELIGHT_GREEN: g,
-                RVR.LEDs.RIGHT_BRAKELIGHT_BLUE: b,
-                RVR.LEDs.LEFT_BRAKELIGHT_RED: r,
-                RVR.LEDs.LEFT_BRAKELIGHT_GREEN: g,
-                RVR.LEDs.LEFT_BRAKELIGHT_BLUE: b
-            }
-        elif isinstance(toy, (R2D2, R2Q5, BOLT)):
+        if isinstance(toy, BOLT):
             mapping = {
                 toy.LEDs.BACK_RED: r,
                 toy.LEDs.BACK_GREEN: g,
@@ -239,24 +139,15 @@ class ToyUtil:
 
     @staticmethod
     def set_back_led_brightness(toy: Toy, brightness: int, not_supported_handler: Callable[[], None] = None):
-        if isinstance(toy, (R2D2, R2Q5, BOLT)):
+        if isinstance(toy, BOLT):
             mapping = {
                 toy.LEDs.BACK_RED: 0,
                 toy.LEDs.BACK_GREEN: 0,
                 toy.LEDs.BACK_BLUE: brightness,
             }
-        elif isinstance(toy, (BB9E, Mini)):
+        elif isinstance(toy, Mini):
             mapping = {
                 toy.LEDs.AIMING: brightness
-            }
-        elif isinstance(toy, RVR):
-            mapping = {
-                RVR.LEDs.RIGHT_BRAKELIGHT_RED: 0,
-                RVR.LEDs.RIGHT_BRAKELIGHT_GREEN: 0,
-                RVR.LEDs.RIGHT_BRAKELIGHT_BLUE: brightness,
-                RVR.LEDs.LEFT_BRAKELIGHT_RED: 0,
-                RVR.LEDs.LEFT_BRAKELIGHT_GREEN: 0,
-                RVR.LEDs.LEFT_BRAKELIGHT_BLUE: brightness
             }
         else:
             mapping = None
@@ -272,61 +163,31 @@ class ToyUtil:
     @staticmethod
     def set_left_front_led(toy: Toy, r: int, g: int, b: int, not_supported_handler: Callable[[], None] = None):
         mapping = None
-        if isinstance(toy, RVR):
-            mapping = {
-                RVR.LEDs.LEFT_HEADLIGHT_RED: r,
-                RVR.LEDs.LEFT_HEADLIGHT_GREEN: g,
-                RVR.LEDs.LEFT_HEADLIGHT_BLUE: b
-            }
         ToyUtil.set_multiple_leds(toy, mapping, not_supported_handler)
 
     @staticmethod
     def set_right_front_led(toy: Toy, r: int, g: int, b: int, not_supported_handler: Callable[[], None] = None):
         mapping = None
-        if isinstance(toy, RVR):
-            mapping = {
-                RVR.LEDs.RIGHT_HEADLIGHT_RED: r,
-                RVR.LEDs.RIGHT_HEADLIGHT_GREEN: g,
-                RVR.LEDs.RIGHT_HEADLIGHT_BLUE: b
-            }
         ToyUtil.set_multiple_leds(toy, mapping, not_supported_handler)
 
     @staticmethod
     def set_battery_side_led(toy: Toy, r: int, g: int, b: int, not_supported_handler: Callable[[], None] = None):
         mapping = None
-        if isinstance(toy, RVR):
-            mapping = {
-                RVR.LEDs.BATTERY_DOOR_FRONT_RED: r,
-                RVR.LEDs.BATTERY_DOOR_FRONT_GREEN: g,
-                RVR.LEDs.BATTERY_DOOR_FRONT_BLUE: b
-            }
         ToyUtil.set_multiple_leds(toy, mapping, not_supported_handler)
 
     @staticmethod
     def set_power_side_led(toy: Toy, r: int, g: int, b: int, not_supported_handler: Callable[[], None] = None):
         mapping = None
-        if isinstance(toy, RVR):
-            mapping = {
-                RVR.LEDs.POWER_BUTTON_FRONT_RED: r,
-                RVR.LEDs.POWER_BUTTON_FRONT_GREEN: g,
-                RVR.LEDs.POWER_BUTTON_FRONT_BLUE: b
-            }
         ToyUtil.set_multiple_leds(toy, mapping, not_supported_handler)
 
     @staticmethod
     def set_holo_projector(toy: Toy, brightness: int, not_supported_handler: Callable[[], None] = None):
-        if isinstance(toy, (R2D2, R2Q5)):
-            mapping = {toy.LEDs.HOLO_PROJECTOR: brightness}
-        else:
-            mapping = None
+        mapping = None
         ToyUtil.set_multiple_leds(toy, mapping, not_supported_handler)
 
     @staticmethod
     def set_logic_display(toy: Toy, brightness: int, not_supported_handler: Callable[[], None] = None):
-        if isinstance(toy, (R2D2, R2Q5)):
-            mapping = {toy.LEDs.LOGIC_DISPLAYS: brightness}
-        else:
-            mapping = None
+        mapping = None
         ToyUtil.set_multiple_leds(toy, mapping, not_supported_handler)
 
     @staticmethod
@@ -404,9 +265,6 @@ class ToyUtil:
             mapping = dict((e, 0) for e in toy.LEDs)
         else:
             mapping = None
-
-        if isinstance(toy, RVR):
-            mapping.pop(RVR.LEDs.UNDERCARRIAGE_WHITE)
 
         def __fallback():
             ToyUtil.set_main_led(toy, 0, 0, 0, False)
@@ -652,8 +510,6 @@ class ToyUtil:
     @staticmethod
     def set_robot_state_on_start(toy: Toy):
         # TODO setUserColour
-        ToyUtil.set_head_position(toy, 0)
-        ToyUtil.perform_leg_action(toy, R2LegActions.THREE_LEGS)
         ToyUtil.set_locator_flags(toy, False)
         ToyUtil.configure_collision_detection(toy)
         ToyUtil.set_power_notifications(toy, True)
@@ -662,7 +518,4 @@ class ToyUtil:
         if hasattr(toy, 'sensor_control'):
             toy.sensor_control.set_interval(150)
         ToyUtil.turn_off_leds(toy)
-        if isinstance(toy, RVR):
-            ToyUtil.set_color_detection(toy, True)
-            ToyUtil.reset_heading(toy)
         ToyUtil.reset_locator(toy)

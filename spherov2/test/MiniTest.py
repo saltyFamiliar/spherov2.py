@@ -1,4 +1,3 @@
-# python3
 import time
 
 from spherov2 import scanner
@@ -6,8 +5,8 @@ from spherov2.sphero_edu import SpheroEduAPI
 from spherov2.types import Color
 
 print("Testing Starting...")
-print("Connecting to BB8...")
-toy = scanner.find_BB8()
+print("Connecting to BOLT...")
+toy = scanner.find_BOLT()
 if toy is not None:
     print("Connected.")
     with SpheroEduAPI(toy) as droid:

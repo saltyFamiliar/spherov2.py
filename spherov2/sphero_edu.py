@@ -9,21 +9,13 @@ from typing import Union, Callable, Dict, Iterable, List
 import numpy as np
 from transforms3d.euler import euler2mat
 
-from spherov2.commands.animatronic import R2LegActions
 from spherov2.commands.io import IO, FrameRotationOptions, FadeOverrideOptions
 from spherov2.commands.power import BatteryVoltageAndStateStates
 from spherov2.controls import RawMotorModes
 from spherov2.helper import bound_value, bound_color
 from spherov2.toy import Toy
-from spherov2.toy.bb8 import BB8
-from spherov2.toy.bb9e import BB9E
 from spherov2.toy.bolt import BOLT
 from spherov2.toy.mini import Mini
-from spherov2.toy.ollie import Ollie
-from spherov2.toy.r2d2 import R2D2
-from spherov2.toy.r2q5 import R2Q5
-from spherov2.toy.rvr import RVR
-from spherov2.toy.sphero import Sphero
 from spherov2.types import Color
 from spherov2.utils import ToyUtil
 
@@ -48,12 +40,7 @@ class EventType(Enum):
 
 class LedManager:
     def __init__(self, cls):
-        if cls is RVR:
-            self.__mapping = {
-                'front': ('left_headlight', 'right_headlight'),
-                'main': ('left', 'right', 'front', 'back')
-            }
-        elif cls in (R2D2, R2Q5, BOLT):
+        if cls is BOLT:
             self.__mapping = {'main': ('front', 'back')}
         else:
             self.__mapping = {}
@@ -213,14 +200,8 @@ class SpheroEduAPI:
 
         time_pre_rev = .45
 
-        if isinstance(self.__toy, RVR):
-            time_pre_rev = 1.5
-        elif isinstance(self.__toy, (R2D2, R2Q5)):
-            time_pre_rev = .7
-        elif isinstance(self.__toy, Mini):
+        if isinstance(self.__toy, Mini):
             time_pre_rev = .5
-        elif isinstance(self.__toy, Ollie):
-            time_pre_rev = .6
 
         abs_angle = abs(angle)
         duration = max(duration, time_pre_rev * abs_angle / 360)
@@ -249,7 +230,7 @@ class SpheroEduAPI:
         to be on to function. However, you can control the motors using Motor Power with :func:`raw_motor` when
         the control system is off."""
         self.__stabilization = stabilize
-        if isinstance(self.__toy, (Sphero, Mini, Ollie, BB8, BB9E, BOLT)):
+        if isinstance(self.__toy, (Mini, BOLT)):
             ToyUtil.set_stabilization(self.__toy, stabilize)
 
     def __update_raw_motor(self):
@@ -301,43 +282,6 @@ class SpheroEduAPI:
         self.__heading = (self.__compass_zero + direction) % 360
         ToyUtil.roll_start(self.__toy, self.__heading, self.__speed)
 
-    # Star Wars Droid Movements
-    def play_animation(self, animation: IntEnum):
-        """Plays iconic `Star Wars Droid animations <https://edu.sphero.com/remixes/1195472/>`_ unique to BB-8, BB-9E,
-        R2-D2 and R2-Q5 that combine movement, lights and sound. All animation enums can be accessed under the droid
-        class, such as :class:`R2D2.Animations.CHARGER_1`."""
-        if hasattr(self.__toy, 'Animations'):
-            if animation not in self.__toy.Animations:
-                raise ValueError(f'Animation {animation} cannot be played by this toy')
-            with self.__updating:
-                self.__stop_all()
-            ToyUtil.play_animation(self.__toy, animation, True)
-
-    # The R2-D2 and R2-Q5 Droids are physically different from other Sphero robots,
-    # so there are some unique commands that only they can use.
-    def set_dome_position(self, angle: float):
-        """Rotates the dome on its axis, from -160° to 180°. For example, set to 45° using ``set_dome_position(45).``"""
-        if isinstance(self.__toy, (R2D2, R2Q5)):
-            ToyUtil.set_head_position(self.__toy, bound_value(-160., angle, 180.))
-
-    def set_stance(self, stance: Stance):
-        """Changes the stance between bipod and tripod. Set to bipod using ``set_stance(Stance.Bipod)`` and
-        to tripod using ``set_stance(Stance.Tripod)``. Tripod is required for rolling."""
-        if isinstance(self.__toy, (R2D2, R2Q5)):
-            if stance == Stance.Bipod:
-                ToyUtil.perform_leg_action(self.__toy, R2LegActions.TWO_LEGS)
-            elif stance == Stance.Tripod:
-                ToyUtil.perform_leg_action(self.__toy, R2LegActions.THREE_LEGS)
-            else:
-                raise ValueError(f'Stance {stance} is not supported')
-
-    def set_waddle(self, waddle: bool):
-        """Turns the waddle walk on using `set_waddle(True)`` and off using ``set_waddle(False)``."""
-        if isinstance(self.__toy, (R2D2, R2Q5)):
-            with self.__updating:
-                self.__stop_all()
-            ToyUtil.perform_leg_action(self.__toy, R2LegActions.WADDLE if waddle else R2LegActions.STOP)
-
     # Lights: control the color and brightness of LEDs on a robot.
     def set_main_led(self, color: Color):
         """Changes the color of the main LED light, or the full matrix on Sphero BOLT. Set this using RGB
@@ -352,7 +296,7 @@ class SpheroEduAPI:
 
         Set this using RGB (red, green, blue) values on a scale of 0 - 255. For example, the magenta color is expressed
         as ``set_front_color(Color(239, 0, 255))``."""
-        if isinstance(self.__toy, (R2D2, R2Q5, BOLT, RVR)):
+        if isinstance(self.__toy, BOLT):
             self.__leds['front'] = bound_color(color, self.__leds['front'])
             ToyUtil.set_front_led(self.__toy, **self.__leds['front']._asdict())
 
@@ -377,7 +321,7 @@ class SpheroEduAPI:
         if isinstance(color, int):
             self.__leds['back'] = Color(0, 0, bound_value(0, color, 255))
             ToyUtil.set_back_led_brightness(self.__toy, self.__leds['back'].b)
-        elif isinstance(self.__toy, (R2D2, R2Q5, BOLT, RVR, Mini)):
+        elif isinstance(self.__toy, (BOLT, Mini)):
             self.__leds['back'] = bound_color(color, self.__leds['back'])
             ToyUtil.set_back_led(self.__toy, **self.__leds['back']._asdict())
 
@@ -545,65 +489,6 @@ class SpheroEduAPI:
                     self.__leds[strMapLoc] = bound_color(color, self.__leds[strMapLoc])
             ToyUtil.set_matrix_fill(self.__toy, x1, y1, x2, y2, color.r, color.g, color.b, is_user_color=False)
 
-
-    # Sphero RVR Lights
-    def set_left_headlight_led(self, color: Color):
-        """Changes the color of the front left headlight LED on RVR. Set this using RGB (red, green, blue) values on a
-        scale of 0 - 255. For example, the pink color is expressed as
-        ``set_left_headlight_led(Color(253, 159, 255))``."""
-        if isinstance(self.__toy, RVR):
-            self.__leds['left_headlight'] = bound_color(color, self.__leds['left_headlight'])
-            ToyUtil.set_left_front_led(self.__toy, **self.__leds['left_headlight']._asdict())
-
-    def set_right_headlight_led(self, color: Color):
-        """Changes the color of the front right headlight LED on RVR. Set this using RGB (red, green, blue) values on a
-        scale of 0 - 255. For example, the blue color is expressed as
-        ``set_right_headlight_led(0, 28, 255)``."""
-        if isinstance(self.__toy, RVR):
-            self.__leds['right_headlight'] = bound_color(color, self.__leds['right_headlight'])
-            ToyUtil.set_right_front_led(self.__toy, **self.__leds['right_headlight']._asdict())
-
-    def set_left_led(self, color: Color):
-        """Changes the color of the LED on RVR's left side (which is the side with RVR's battery bay door). Set this
-        using RGB (red, green, blue) values on a scale of 0 - 255. For example, the green color is expressed as
-        ``set_left_led(Color(0, 255, 34))``."""
-        if isinstance(self.__toy, RVR):
-            self.__leds['left'] = bound_color(color, self.__leds['left'])
-            ToyUtil.set_battery_side_led(self.__toy, **self.__leds['left']._asdict())
-
-    def set_right_led(self, color: Color):
-        """Changes the color of the LED on RVR's right side (which is the side with RVR's power button). Set this using
-        RGB (red, green, blue) values on a scale of 0 - 255. For example, the red color is expressed as
-        ``set_right_led(Color(255, 18, 0))``."""
-        if isinstance(self.__toy, RVR):
-            self.__leds['right'] = bound_color(color, self.__leds['right'])
-            ToyUtil.set_power_side_led(self.__toy, **self.__leds['right']._asdict())
-
-    # BB-9E Lights
-    def set_dome_leds(self, brightness: int):
-        """Controls the brightness of the two single color LEDs (red and blue) in the dome, from 0 to 15. We don't use
-        0-255 for this light because it has less granular control. For example, set them to full brightness using
-        ``set_dome_leds(15)``."""
-        if isinstance(self.__toy, BB9E):
-            self.__leds['dome'] = bound_value(0, brightness, 15)
-            ranged = self.__leds['dome'] * 255 // 15
-            ToyUtil.set_head_led(self.__toy, ranged)
-
-    # R2-D2 & R2-Q5 Lights
-    def set_holo_projector_led(self, brightness: int):
-        """Changes the brightness of the Holographic Projector white LED, from 0 to 255. For example, set it to full
-        brightness using ``set_holo_projector_led(255)``."""
-        if isinstance(self.__toy, (R2D2, R2Q5)):
-            self.__leds['holo_projector'] = bound_value(0, brightness, 255)
-            ToyUtil.set_holo_projector(self.__toy, self.__leds['holo_projector'])
-
-    def set_logic_display_leds(self, brightness: int):
-        """Changes the brightness of the Logic Display LEDs, from 0 to 255. For example, set it to full brightness
-        using ``set_logic_display_leds(255)``."""
-        if isinstance(self.__toy, (R2D2, R2Q5)):
-            self.__leds['logic_display'] = bound_value(0, brightness, 255)
-            ToyUtil.set_logic_display(self.__toy, self.__leds['logic_display'])
-
     # Sounds: Control sounds and words which can play from your programming device's speaker or the robot.
     def play_sound(self, sound: IntEnum):
         """Unique Star Wars Droid Sounds are available for BB-8, BB-9E and R2-D2. For example, to play the R2-D2 Burnout
@@ -615,10 +500,7 @@ class SpheroEduAPI:
 
     # Sensors: Querying sensor data allows you to react to real-time values coming from the robots' physical sensors.
     def __start_capturing_sensor_data(self):
-        if isinstance(self.__toy, RVR):
-            sensors = ['accelerometer', 'gyroscope', 'imu', 'locator', 'velocity', 'ambient_light', 'color_detection']
-            self.__sensor_name_mapping['imu'] = 'attitude'
-        elif isinstance(self.__toy, BOLT):
+        if isinstance(self.__toy, BOLT):
             sensors = ["accel_one", 'accelerometer', 'ambient_light', 'attitude', "core_time", 'gyroscope', 'locator', "quaternion", 'velocity']
         else:
             sensors = ['attitude', 'accelerometer', 'gyroscope', 'locator', 'velocity']
@@ -809,15 +691,6 @@ class SpheroEduAPI:
             return Color(round(color['r']), round(color['g']), round(color['b']))
         return None
 
-    # BB-9E Sensors
-    def get_dome_leds(self):
-        """Provides the brightness of the Dome LEDs, from 0 to 15."""
-        return self.__leds.get('dome', None)
-
-    # R2-D2 & R2-Q5 Sensors
-    def get_holo_projector_led(self):
-        """Provides the brightness of the Holographic Projector LED, from 0 to 255."""
-        return self.__leds.get('holo_projector', None)
 
     def get_logic_display_leds(self):
         """Provides the brightness of the white Logic Display LEDs, from 0 to 255."""

@@ -45,22 +45,6 @@ Sphero BOLT Movements
 ---------------------
 Sphero BOLT has a compass (magnetometer) sensor that has unique functionality. Nearby metallic and magnetic objects can affect the accuracy of the compass, so try to use this feature in an area without that interference, or hold it up in the air if you can't get away from interference.
 
-Star Wars Droid Movements
--------------------------
-.. class:: SpheroEduAPI
-
-    .. automethod:: play_animation
-
-R2-D2 & R2-Q5 Movements
------------------------
-The R2-D2 and R2-Q5 Droids are physically different from other Sphero robots, so there are some unique commands that only they can use.
-
-.. class:: SpheroEduAPI
-
-    .. automethod:: set_dome_position
-    .. automethod:: set_stance
-    .. automethod:: set_waddle
-
 Lights
 ======
 Lights control the color and brightness of LEDs on a robot.
@@ -93,52 +77,6 @@ Sphero BOLT has unique lighting capabilities with a front led, back led, and 8x8
     .. method:: set_back_led(color: spherov2.types.Color)
 
         Changes the color of the back LED light, aka the "Tail Light" or "Aim Light." Set this using RGB (red, green, blue) values on a scale of 0 - 255. For example, the green color is expressed as ``set_back_led(Color(0, 255, 0))``. Sphero BOLT has this as an RGB LED on the back, whereas previous Spheros are limited to `blue only <#spherov2.sphero_edu.SpheroEduAPI.set_back_led>`_.
-
-Sphero RVR Lights
------------------
-.. class:: SpheroEduAPI
-
-    .. automethod:: set_left_headlight_led
-    .. automethod:: set_right_headlight_led
-    .. automethod:: set_left_led
-    .. automethod:: set_right_led
-
-    .. method:: set_front_led(color: spherov2.types.Color)
-
-        Changes the color of RVR's front two LED headlights together. Set this using RGB (red, green, blue) values on a scale of 0 - 255. For example, the magenta color is expressed as ``set_front_color(Color(239, 0, 255))``.
-
-    .. method:: set_back_led(color: spherov2.types.Color)
-
-        Changes the color of the back LED light, aka the "Tail Light" or "Aim Light." Set this using RGB (red, green, blue) values on a scale of 0 - 255. For example, the above green color is expressed as ``set_back_led(Color(0, 255, 0))``.
-
-BB-9E Lights
-------------
-.. class:: SpheroEduAPI
-
-    .. automethod:: set_dome_leds
-
-R2-D2 & R2-Q5 Lights
---------------------
-.. class:: SpheroEduAPI
-
-    .. method:: set_front_led(color: spherov2.types.Color)
-
-        Changes the color of the front LED light. Set this using RGB (red, green, blue) values on a scale of 0 - 255. For example, the fuchsia color is expressed as ``set_front_color(Color(232, 0, 255))``
-
-    .. method:: set_back_led(color: spherov2.types.Color)
-
-        Changes the color of the back LED light. Set this using RGB (red, green, blue) values on a scale of 0 - 255. For example, the above green color is expressed as ``set_back_led(Color(0, 255, 0))``.
-
-    .. automethod:: set_holo_projector_led
-    .. automethod:: set_logic_display_leds
-
-Sounds
-======
-Control sounds and words which can play from your programming device's speaker or the robot (R2-D2 & R2-Q5 only).
-
-.. class:: SpheroEduAPI
-
-    .. automethod:: play_sound
 
 Sensors
 =======
@@ -173,28 +111,6 @@ Sphero BOLT Sensors
     .. method:: get_front_led
 
         Provides the RGB color of the front LED, from 0 to 255 for each color channel.
-
-Sphero RVR Sensors
-------------------
-.. class:: SpheroEduAPI
-
-    .. automethod:: get_color
-
-R2-D2 & R2-Q5 Sensors
----------------------
-.. class:: SpheroEduAPI
-
-    .. method:: get_back_led
-
-        Provides the RGB color of the back LED, from 0 to 255 for each color channel.
-
-    .. method:: get_front_led
-
-        Provides the RGB color of the front LED, from 0 to 255 for each color channel.
-
-    .. automethod:: get_dome_leds
-    .. automethod:: get_holo_projector_led
-    .. automethod:: get_logic_display_leds
 
 Communications
 ==============
@@ -382,20 +298,3 @@ Executes conditional logic called when an infrared message is received on the sp
 
     api.register_event(EventType.on_ir_message, on_ir_message_4)
     api.listen_for_ir_message(message_channels)
-
-On Color
---------
-Executes conditional logic called when Sphero RVR's color sensor returns a specified RGB color value.
-
-.. code-block:: python
-
-    color = (Color(255, 15, 60), )
-
-    def on_color(api, color):
-        if color != Color(255, 15, 60):
-            return
-
-    api.register_event(EventType.on_color, on_color)
-    api.listen_for_color_sensor(colors)
-
-The color that RVR's color sensor returns needs to be very close to the color set with :func:`listen_for_color_sensor` for the event to execute correctly.

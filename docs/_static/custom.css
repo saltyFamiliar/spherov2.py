@@ -1,3 +1,0 @@
-dl.class > dt:not([id]) {
-    display: none !important;
-}
