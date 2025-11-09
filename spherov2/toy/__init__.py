@@ -1,4 +1,5 @@
 import threading
+import functools
 import time
 from collections import OrderedDict, defaultdict
 from concurrent import futures
@@ -116,15 +117,13 @@ class Toy:
 
     @classmethod
     def implements(cls, method, with_target=False):
-        m = getattr(cls, method.__name__, None)
+        m = cls.__dict__.get(method.__name__, None)
         if m is method:
             return with_target == cls._require_target
-        if hasattr(m, '_partialmethod'):
-            f = m._partialmethod
-            return f.func is method and (
-                    ('proc' in f.keywords and not with_target) or with_target == cls._require_target)
+        if isinstance(m, functools.partialmethod):
+            return m.func is method and (
+                    ('proc' in m.keywords and not with_target) or with_target == cls._require_target)
         return False
-
 
 class ToyV2(Toy):
     _packet = PacketV2
