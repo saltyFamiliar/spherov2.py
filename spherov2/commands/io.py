@@ -1,15 +1,8 @@
 import struct
-from enum import IntFlag, IntEnum
+from enum import IntEnum
 
 from spherov2.commands import Commands
 from spherov2.helper import to_bytes, to_int
-
-
-class AudioPlaybackModes(IntFlag):
-    PLAY_IMMEDIATELY = 0x0  # 0b0
-    PLAY_ONLY_IF_NOT_PLAYING = 0x1  # 0b1
-    PLAY_AFTER_CURRENT_SOUND = 0x2  # 0b10
-
 
 class UsbConnectionStatus(IntEnum):
     UNKNOWN = 0
@@ -22,11 +15,6 @@ class FadeOverrideOptions(IntEnum):
     NONE = 0
     NO_FADING = 1
     FADING_ANIMATIONS = 2
-
-
-class SpecdrumsColorPaletteIndicies(IntEnum):
-    DEFAULT = 0
-    MIDI = 1
 
 
 class FrameInfoTypes(IntEnum):
@@ -54,22 +42,6 @@ class IO(Commands):
     @staticmethod
     def set_led(toy, s, s2, s3, s4, b, proc=None):  # Untested / Unknown Param Names
         toy._execute(IO._encode(toy, 4, proc, [s, s2, s3, s4, b]))
-
-    @staticmethod
-    def play_audio_file(toy, sound, playback_mode: AudioPlaybackModes, proc=None):
-        toy._execute(IO._encode(toy, 7, proc, [*to_bytes(sound, 2), playback_mode]))
-
-    @staticmethod
-    def set_audio_volume(toy, volume, proc=None):
-        toy._execute(IO._encode(toy, 8, proc, [volume]))
-
-    @staticmethod
-    def get_audio_volume(toy, proc=None):
-        return toy._execute(IO._encode(toy, 9, proc)).data[0]
-
-    @staticmethod
-    def stop_all_audio(toy, proc=None):
-        toy._execute(IO._encode(toy, 10, proc))
 
     @staticmethod
     def set_all_leds_with_16_bit_mask(toy, mask, values, proc=None):
