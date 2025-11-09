@@ -11,11 +11,11 @@ from spherov2.commands.power import Power
 from spherov2.commands.sensor import Sensor
 from spherov2.commands.system_info import SystemInfo
 from spherov2.controls.v2 import AnimationControl, DriveControl, LedControl, SensorControl, StatsControl, Processors
-from spherov2.toy import ToyV2, Toy, ToySensor
+from spherov2.toy import Toy, ToySensor
 from spherov2.types import ToyType
 
 
-class BOLT(ToyV2):
+class BOLT(Toy):
     toy_type = ToyType('Sphero BOLT', 'SB-', 'SB', .075)
     _handshake = [('00020005-574f-4f20-5370-6865726f2121', bytearray(b'usetheforce...band'))] #TODO: find correct info here
 

@@ -1,5 +1,5 @@
-import threading
 import functools
+import threading
 import time
 from collections import OrderedDict, defaultdict
 from concurrent import futures
@@ -7,7 +7,6 @@ from functools import partial
 from queue import SimpleQueue
 from typing import NamedTuple, Callable
 
-from spherov2.controls.v1 import Packet as PacketV1
 from spherov2.controls.v2 import Packet as PacketV2
 from spherov2.types import ToyType
 
@@ -20,15 +19,16 @@ class ToySensor(NamedTuple):
 
 
 class Toy:
+    """Base class for BOLT and Mini robots using V2 protocol"""
     toy_type = ToyType('Robot', None, 'Sphero', .06)
     sensors = OrderedDict()
     extended_sensors = OrderedDict()
 
-    _send_uuid = '22bb746f-2ba1-7554-2d6f-726568705327'
-    _response_uuid = '22bb746f-2ba6-7554-2d6f-726568705327'
-    _handshake = [('22bb746f-2bbd-7554-2d6f-726568705327', bytearray(b'011i3')),
-                  ('22bb746f-2bb2-7554-2d6f-726568705327', bytearray([7]))]
-    _packet = PacketV1
+    # V2 Protocol Configuration
+    _send_uuid = '00010002-574f-4f20-5370-6865726f2121'
+    _response_uuid = '00010002-574f-4f20-5370-6865726f2121'
+    _handshake = []
+    _packet = PacketV2
     _require_target = False
 
     def __init__(self, toy, adapter_cls):
@@ -64,7 +64,7 @@ class Toy:
             raise
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, *args):
         self.__adapter.close()
         self.__adapter = None
         if self.__thread.is_alive():
@@ -77,7 +77,6 @@ class Toy:
             payload = self.__packet_queue.get()
             if payload is None:
                 break
-            # print('request ' + ' '.join([hex(c) for c in payload]))
             while payload:
                 self.__adapter.write(self._send_uuid, payload[:20])
                 payload = payload[20:]
@@ -107,7 +106,6 @@ class Toy:
         self.__decoder.add(data)
 
     def __new_packet(self, packet):
-        # print('response ' + ' '.join([hex(c) for c in packet.build()]))
         key = packet.id
         queue = self.__waiting[key]
         while not queue.empty():
@@ -117,44 +115,16 @@ class Toy:
 
     @classmethod
     def implements(cls, method, with_target=False):
+        # Get the attribute directly from the class dict
         m = cls.__dict__.get(method.__name__, None)
+        
+        # Direct match
         if m is method:
             return with_target == cls._require_target
+        
+        # Check if it's a partialmethod
         if isinstance(m, functools.partialmethod):
             return m.func is method and (
                     ('proc' in m.keywords and not with_target) or with_target == cls._require_target)
+        
         return False
-
-class ToyV2(Toy):
-    _packet = PacketV2
-    _handshake = []
-
-    _response_uuid = _send_uuid = '00010002-574f-4f20-5370-6865726f2121' #Original
-    #_response_uuid = '22bb746f-2ba6-7554-2d6f-726568705327'
-    #_send_uuid =     '22bb746f-2ba1-7554-2d6f-726568705327'
-    #_send_uuid =     '00010002-574f-4f20-5370-6865726f2121'
-    #_response_uuid = '00020002-574f-4f20-5370-6865726f2121'
-
-    # _response_uuid = _send_uuid = '00010001-574f-4f20-5370-6865726f2121' #Available responses
-    # _response_uuid = _send_uuid = '00010002-574f-4f20-5370-6865726f2121'
-    # _response_uuid = _send_uuid = '00010003-574f-4f20-5370-6865726f2121'
-    # _response_uuid = _send_uuid = '00020001-574f-4f20-5370-6865726f2121'
-    # _response_uuid = _send_uuid = '00020002-574f-4f20-5370-6865726f2121'
-    # _response_uuid = _send_uuid = '00020004-574f-4f20-5370-6865726f2121'
-    # _response_uuid = _send_uuid = '00020005-574f-4f20-5370-6865726f2121'
-    # _response_uuid = _send_uuid = '22bb746f-2bbd-7554-2d6f-726568705327'
-    # _response_uuid = _send_uuid = '22bb746f-2bb2-7554-2d6f-726568705327'
-    # _response_uuid = _send_uuid = '22bb746f-2bbf-7554-2d6f-726568705327'
-    # _response_uuid = _send_uuid = '22bb746f-2ba0-7554-2d6f-726568705327'
-    # _response_uuid = _send_uuid = '22bb746f-2ba1-7554-2d6f-726568705327'
-    # _response_uuid = _send_uuid = '22bb746f-2ba6-7554-2d6f-726568705327'
-    # _response_uuid = _send_uuid = '22bb746f-2bb0-7554-2d6f-726568705327'
-
-#Some values found in apk - should revisit what values may be per robot
-#Adaptor.BLEService = "22bb746f2bb075542d6f726568705327";
-#Adaptor.WakeCharacteristic = "22bb746f2bbf75542d6f726568705327";
-#Adaptor.TXPowerCharacteristic = "22bb746f2bb275542d6f726568705327";
-#Adaptor.AntiDosCharacteristic = "22bb746f2bbd75542d6f726568705327";
-#Adaptor.RobotControlService = "22bb746f2ba075542d6f726568705327";
-#Adaptor.CommandsCharacteristic = "22bb746f2ba175542d6f726568705327";
-#Adaptor.ResponseCharacteristic = "22bb746f2ba675542d6f726568705327";

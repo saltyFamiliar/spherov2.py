@@ -14,11 +14,11 @@ from spherov2.commands.system_info import SystemInfo
 from spherov2.commands.system_mode import SystemMode
 from spherov2.controls.v2 import DriveControl, FirmwareUpdateControl, LedControl, SensorControl, \
     StatsControl
-from spherov2.toy import ToyV2, Toy, ToySensor
+from spherov2.toy import Toy, ToySensor
 from spherov2.types import ToyType
 
 
-class Mini(ToyV2):
+class Mini(Toy):
     toy_type = ToyType('Sphero Mini', 'SM-', 'SM', .12)
     _handshake = [('00020005-574f-4f20-5370-6865726f2121', bytearray(b'usetheforce...band'))]  # Remove ForceBand
 
